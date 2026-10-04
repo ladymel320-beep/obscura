@@ -149,3 +149,11 @@ Sign up: https://go.nodemaven.com/obscuraagent
 
 Obscura discount codes: `OBSCURA35` (35% off mobile and residential),
 `OBSCURA40` (40% off ISP / static).
+
+## Cursor Cloud specific instructions
+
+- The default image ships Rust 1.83. `Cargo.lock` includes edition 2024 crates (`clap_derive` 4.6+), which that compiler cannot parse. Install runs `rustup update stable` before building. CI tracks stable the same way (`dtolnay/rust-toolchain@stable`).
+- `cargo-nextest` is on `PATH`. Keep using `cargo nextest run`, not `cargo test`.
+- `clang`, `cmake`, `libclang-dev`, and `llvm-dev` are installed so `--features stealth` can compile BoringSSL. The cached binary is the default rustls release build at `./target/release/obscura` (and `obscura-worker`).
+- Loopback fetches stay blocked unless the command passes `--allow-private-network`. A `data:` URL or a public host such as `https://example.com` does not need that flag. Smoke check: `./target/release/obscura fetch 'data:text/html,<title>ok</title>' --eval "document.title"`.
+- `cargo nextest run --workspace` is the suite to run. `obscura-cli` `test_wait_for_selector` waits for an `h1` on `https://example.com`. That page no longer has an `h1` (paragraphs and an SVG), so this one test times out. The rest of the suite passes. It is the live page, not a missing toolchain package.
